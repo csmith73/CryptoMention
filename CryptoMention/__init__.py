@@ -12,6 +12,7 @@ from flask_socketio import SocketIO
 from CryptoMention.forms import SignupForm
 from flask.ext.bcrypt import Bcrypt
 from datetime import datetime, date, timedelta
+from dateutil import parser
 
 
 app = Flask(__name__)
@@ -76,6 +77,33 @@ class RepeatedTimer(object):
     self._timer.cancel()
     self.is_running = False
 
+def read_db_historical(time_range,name):
+    print(time_range)
+    global cur_minutes
+    sqlite_file = 'wordfreq'
+    conn = sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    past_time = datetime.now() - timedelta(minutes=time_range)
+    c.execute("SELECT frequency, date FROM words WHERE date BETWEEN ? AND ? AND name=?",(past_time, datetime.now(),name))
+    rows = c.fetchall()
+    objects_list = []
+    global count
+    count = 0
+    for row in rows:
+        d = collections.OrderedDict()
+        #dt = str(row[1])
+        #dt = parser.parse(dt)
+
+        d['x'] = count = count +1
+        d['y'] = row[0]
+        objects_list.append(d)
+    sorted_list = sorted(objects_list, key=lambda k: k['x'], reverse=True)
+    #sorted_list = objects_list
+    sorted_list = sorted_list[0:20]
+    print(sorted_list)
+    j = json.dumps(sorted_list)
+    socketio.emit('time_change_historical', j)
+
 
 def read_db(time_range):
     print(time_range)
@@ -103,9 +131,33 @@ def read_db(time_range):
     Timer1 = threading.Timer(10,read_db,[cur_minutes])
     Timer1.start()
 
+def update_coin_table(time_range):
+    sqlite_file = 'wordfreq'
+    conn = sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    five_minutes = datetime.now() - timedelta(minutes=time_range)
+    c.execute("SELECT name, sum(frequency) FROM words WHERE date BETWEEN ? AND ? GROUP BY name ",
+              (five_minutes, datetime.now()))
+    rows = c.fetchall()
+    objects_list = []
+    for row in rows:
+        d = collections.OrderedDict()
+        d['coin'] = str(row[0])
+        d['frequency'] = row[1]
+        objects_list.append(d)
+    j = json.dumps(objects_list)
+    print(objects_list)
+    socketio.emit('update_coin_table', j)
+
+
 @socketio.on('sub_change')
 def sub_reddit_change(sub_change):
     print(sub_change)
+
+@socketio.on('time_change_historical')
+def time_change_historical(time_change_historical):
+    time_change_historical = 1440
+    read_db_historical(time_change_historical, 'btc')
 
 @socketio.on('time_change')
 def test_message(time_change):
@@ -122,6 +174,7 @@ def test_message(time_change):
         cur_minutes = 1440
     Timer1.cancel()
     read_db(cur_minutes)
+    update_coin_table(cur_minutes)
 
 
 
@@ -138,6 +191,18 @@ def load_user(email):
 def home():
     return render_template('home.html')
 
+@app.route("/dashboard", endpoint='dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route("/historical", endpoint='historical')
+def historical():
+    return render_template('historical.html')
+
+@app.route("/about", endpoint='about')
+def about():
+    return render_template('about.html')
+
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -153,7 +218,7 @@ def login():
 
                 if bcrypt.check_password_hash(user.password, form.password.data):
                     login_user(user)
-                    return "User logged in"
+                    return render_template('dashboard.html')
                 else:
                     return "Wrong password"
             else:

@@ -14,42 +14,38 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
             integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
             crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+
+
+
     <link rel="stylesheet" type="text/css" href="../static/css/epoch.min.css">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
           integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="../static/css/site.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+
 </head>
 <body>
-<div id="app" class="container-fluid">
-    <nav class="navbar navbar-expand-lg navbar-light bg-faded">
-        <a class="navbar-brand" href="{{ url_for('home') }}">CryptoMention</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div id="navbarNavDropdown" class="navbar-collapse collapse">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('about') }}">About</a>
-                </li>
-
-
-            </ul>
-            <ul class="navbar-nav">
-                <li class="nav-item">
-                    <a class="btn btn-success navbar-btn" href="{{ url_for('login') }}">Login</a>
-                </li>
-
-            </ul>
-        </div>
-    </nav>
-
-
-
-
+<nav class="navbar navbar-expand-md navbar-light bg-faded">
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse"
+            data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false"
+            aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand" href="#">CryptoMention</a>
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard <span
+                        class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{{ url_for('historical') }}">Historical</a>
+            </li>
+        </ul>
+    </div>
+</nav>
 
 <div class="float-left" style="padding: 25px 25px 25px 25px">
     <h4 class="div-inline">Realtime Coin Mentions on </h4>
@@ -78,23 +74,60 @@
 <div id="container1" class="epoch category20b">
     <div id="barChart" style="height: 300px"></div>
 </div>
+
+<div id="app" class="container-fluid" style="padding-top: 120px">
+<table id="cointable" class="display" cellspacing="0" width="100%">
+    <thead>
+    <tr>
+        <th>Coin</th>
+        <th>Frequency</th>
+
+    </tr>
+    </thead>
+    <tfoot>
+    <tr>
+        <th>Coin</th>
+        <th>Frequency</th>
+
+    </tr>
+    </tfoot>
+</table>
 </div>
+
 
 <script>
     var update_data = []
     bar = $('#barChart').epoch({type: 'bar', data: update_data, ticks: {top: 0, right: 0, bottom: 40, left: 15},});
 
     $(document).ready(function () {
+        var cointable = $('#cointable').DataTable({
+            "scrollY": "400px",
+            "paging": false,
+            "order": [[ 1, "desc" ]],
+            "data": [],
+            "columns": [
+                {"data": "coin"},
+                {"data": "frequency"},
+
+            ]
+        })
         var socket = io.connect('http://' + document.domain + ':' + location.port);
         socket.emit('time_change', 'fmin')
         socket.on('update', function (update) {
             update_data = JSON.parse(update)
-            update_data = JSON.stringify(update_data)
-            update_data = "[{label: 'Series 1', values: " + update_data + '}]'
-            update_data = eval('(' + update_data + ')');
-            console.log(update_data)
-            bar.setData(update_data);
+            graph_data = JSON.stringify(update_data)
+            graph_data = "[{label: 'Series 1', values: " + graph_data + '}]'
+            graph_data = eval('(' + graph_data + ')');
+            bar.setData(graph_data);
             bar.draw()
+        })
+
+        socket.on('update_coin_table', function (update) {
+            table_data = JSON.parse(update)
+            console.log(table_data)
+            cointable.clear();
+            cointable.rows.add(table_data).draw();
+
         })
 
         $("button").click(function () {
@@ -109,6 +142,8 @@
             console.log(sub_reddit)
             socket.emit('sub_change', sub_reddit)
         });
+
+
     })
 
 
