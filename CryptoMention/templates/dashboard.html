@@ -17,7 +17,6 @@
     <script src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
 
 
-
     <link rel="stylesheet" type="text/css" href="../static/css/epoch.min.css">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
@@ -46,55 +45,75 @@
         </ul>
     </div>
 </nav>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col">
+            <div class="float-left" style="padding: 25px 25px 25px 25px">
+                <h4 class="div-inline">Realtime Coin Mentions on </h4>
+                <div class="dropdown div-inline" style="padding: 8px 8px 8px 8px">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton"
+                            data-toggle="dropdown"
+                            aria-haspopup="true" aria-expanded="false">
+                        r/CryptoCurrency
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item" href="#">r/CryptoCurrency</a></li>
+                        <li><a class="dropdown-item" href="#">r/Altcoin</a></li>
+                        <li><a class="dropdown-item" href="#">r/BitcoinMarkets</a></li>
+                        <li><a class="dropdown-item" href="#">r/EthTrader</a></li>
+                    </ul>
+                </div>
+            </div>
 
-<div class="float-left" style="padding: 25px 25px 25px 25px">
-    <h4 class="div-inline">Realtime Coin Mentions on </h4>
-    <div class="dropdown div-inline" style="padding: 8px 8px 8px 8px">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
-            r/CryptoCurrency
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <li><a class="dropdown-item" href="#">r/CryptoCurrency</a></li>
-            <li><a class="dropdown-item" href="#">r/Altcoin</a></li>
-            <li><a class="dropdown-item" href="#">r/BitcoinMarkets</a></li>
-            <li><a class="dropdown-item" href="#">r/EthTrader</a></li>
-        </ul>
+            <small class="float-right" style="padding: 25px 25px 25px 25px">
+                <button id="fmin" type="button" class="basic-bar-data btn btn-default active" data-value="0">5 Min
+                </button>
+                <button id="tmin" type="button" class="basic-bar-data btn btn-default" data-value="1">30 Min</button>
+                <button id="hr" type="button" class="basic-bar-data btn btn-default" data-value="1">1 Hr</button>
+                <button id="day" type="button" class="basic-bar-data btn btn-default" data-value="1">1 Day</button>
+            </small>
+
+
+            <div id="container1" class="epoch category20b">
+                <div id="barChart" style="height: 300px"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col">
+            <div id="app" class="container-fluid" style="padding-top: 120px">
+                <table id="cointable" class="display" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th>Coin</th>
+                        <th>Frequency</th>
+                        <th>Price</th>
+                        <th>%1h</th>
+                        <th>%24h</th>
+                        <th>%7d</th>
+
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        <th>Coin</th>
+                        <th>Frequency</th>
+                        <th>Price</th>
+                        <th>%1h</th>
+                        <th>%24h</th>
+                        <th>%7d</th>
+
+                    </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        <div class="col">
+        </div>
     </div>
 </div>
-
-<small class="float-right" style="padding: 25px 25px 25px 25px">
-    <button id="fmin" type="button" class="basic-bar-data btn btn-default active" data-value="0">5 Min</button>
-    <button id="tmin" type="button" class="basic-bar-data btn btn-default" data-value="1">30 Min</button>
-    <button id="hr" type="button" class="basic-bar-data btn btn-default" data-value="1">1 Hr</button>
-    <button id="day" type="button" class="basic-bar-data btn btn-default" data-value="1">1 Day</button>
-</small>
-
-
-<div id="container1" class="epoch category20b">
-    <div id="barChart" style="height: 300px"></div>
-</div>
-
-<div id="app" class="container-fluid" style="padding-top: 120px">
-<table id="cointable" class="display" cellspacing="0" width="100%">
-    <thead>
-    <tr>
-        <th>Coin</th>
-        <th>Frequency</th>
-
-    </tr>
-    </thead>
-    <tfoot>
-    <tr>
-        <th>Coin</th>
-        <th>Frequency</th>
-
-    </tr>
-    </tfoot>
-</table>
-</div>
-
-
 <script>
     var update_data = []
     bar = $('#barChart').epoch({type: 'bar', data: update_data, ticks: {top: 0, right: 0, bottom: 40, left: 15},});
@@ -103,11 +122,15 @@
         var cointable = $('#cointable').DataTable({
             "scrollY": "400px",
             "paging": false,
-            "order": [[ 1, "desc" ]],
+            "order": [[1, "desc"]],
             "data": [],
             "columns": [
                 {"data": "coin"},
                 {"data": "frequency"},
+                {"data": "price_usd"},
+                {"data": "percent_change_1h"},
+                {"data": "percent_change_24h"},
+                {"data": "percent_change_7d"},
 
             ]
         })
@@ -124,7 +147,7 @@
 
         socket.on('update_coin_table', function (update) {
             table_data = JSON.parse(update)
-            console.log(table_data)
+            console.log(JSON.stringify(table_data))
             cointable.clear();
             cointable.rows.add(table_data).draw();
 

@@ -12,6 +12,7 @@ from flask_socketio import SocketIO
 from CryptoMention.forms import SignupForm
 from flask.ext.bcrypt import Bcrypt
 from datetime import datetime, date, timedelta
+from collections import defaultdict
 from dateutil import parser
 
 
@@ -78,7 +79,7 @@ class RepeatedTimer(object):
     self.is_running = False
 
 def read_db_historical(time_range,name):
-    print(time_range)
+    #print(time_range)
     global cur_minutes
     sqlite_file = 'wordfreq'
     conn = sqlite3.connect(sqlite_file)
@@ -100,13 +101,13 @@ def read_db_historical(time_range,name):
     sorted_list = sorted(objects_list, key=lambda k: k['x'], reverse=True)
     #sorted_list = objects_list
     sorted_list = sorted_list[0:20]
-    print(sorted_list)
+    #print(sorted_list)
     j = json.dumps(sorted_list)
     socketio.emit('time_change_historical', j)
 
 
 def read_db(time_range):
-    print(time_range)
+    #print(time_range)
     global cur_minutes
     sqlite_file = 'wordfreq'
     conn = sqlite3.connect(sqlite_file)
@@ -123,10 +124,10 @@ def read_db(time_range):
     sorted_list = sorted(objects_list, key=lambda k: k['y'],reverse=True)
     sorted_list = sorted_list[0:39]
 
-    print(sorted_list)
+    #print(sorted_list)
     j = json.dumps(sorted_list)
     socketio.emit('update',j)
-    print(cur_minutes)
+    #print(cur_minutes)
     global Timer1
     Timer1 = threading.Timer(10,read_db,[cur_minutes])
     Timer1.start()
@@ -136,17 +137,58 @@ def update_coin_table(time_range):
     conn = sqlite3.connect(sqlite_file)
     c = conn.cursor()
     five_minutes = datetime.now() - timedelta(minutes=time_range)
-    c.execute("SELECT name, sum(frequency) FROM words WHERE date BETWEEN ? AND ? GROUP BY name ",
-              (five_minutes, datetime.now()))
+    c.execute("SELECT name, sum(frequency) FROM words WHERE date BETWEEN ? AND ? GROUP BY name ",(five_minutes, datetime.now()))
     rows = c.fetchall()
     objects_list = []
+    name_list = []
     for row in rows:
-        d = collections.OrderedDict()
-        d['coin'] = str(row[0])
-        d['frequency'] = row[1]
+        d = {}
+        name_list = name_list + [str(row[0])]
+        d[str(row[0])] = [row[1]]
         objects_list.append(d)
+    c.close()
+
+    sqlite_file = 'wordfreq'
+    conn = sqlite3.connect(sqlite_file)
+    c = conn.cursor()
+    price_list = []
+    l = name_list
+    placeholder = '?'  # For SQLite. See DBAPI paramstyle.
+    placeholders = ', '.join(placeholder for unused in l)
+    query = 'SELECT name, symbol,price_usd, percent_change_1h, percent_change_24h, percent_change_7d FROM coinprice WHERE symbol COLLATE NOCASE  in (%s) OR name collate nocase in (%s)' % (placeholders, placeholders)
+    #print('name_list: ')
+    #print(name_list)
+    l = l+l
+    #print('l: ')
+    #print(l)
+    c.execute(query, l,)
+    rows = c.fetchall()
+    for row in rows:
+        e = {}
+        e[str(row[0]).lower()] = [row[2],row[3],row[4],row[5]]
+        price_list.append(e)
+
+
+
     j = json.dumps(objects_list)
+    print('Object List: ')
     print(objects_list)
+    print(len(objects_list))
+    print('Price List: ')
+    print(price_list)
+    print(len(price_list))
+
+    tot_list = objects_list + price_list
+    #OrderedDict((k, dict1[k] + dict2[k]) for k in dict1 if k in dict2)
+    temp_dict = defaultdict(list)
+    for item in tot_list:
+        for k, v in item.items():
+            temp_dict[k] += v
+
+    new_list = [{k: v} for k, v in temp_dict.items()]
+    print('New List: ')
+    print(new_list)
+
     socketio.emit('update_coin_table', j)
 
 

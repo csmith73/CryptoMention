@@ -59,7 +59,7 @@ def process(text,stopwords=[]):
     tokenizer = RegexpTokenizer(r'\w+')
     tokens = tokenizer.tokenize(text)
     print('All Words: '+ str(tokens))
-    tokens = [word1 for word1 in tokens if word1 in tot_list]
+    tokens = [word1 for word1 in tokens if word1 in tot_list and len(word1)> 2]
     print('Coins Only: ' + str(tokens))
     return [word for word in tokens if word not in stopwords and not word.isdigit()]
 
