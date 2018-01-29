@@ -13,6 +13,7 @@ from CryptoMention.forms import SignupForm
 from flask.ext.bcrypt import Bcrypt
 from datetime import datetime, date, timedelta
 from collections import defaultdict
+import pandas as pd
 from dateutil import parser
 
 
@@ -139,14 +140,38 @@ def update_coin_table(time_range):
     five_minutes = datetime.now() - timedelta(minutes=time_range)
     c.execute("SELECT name, sum(frequency) FROM words WHERE date BETWEEN ? AND ? GROUP BY name ",(five_minutes, datetime.now()))
     rows = c.fetchall()
-    objects_list = []
-    name_list = []
+
+    ob_list = []
+
     for row in rows:
-        d = {}
-        name_list = name_list + [str(row[0])]
-        d[str(row[0])] = [row[1]]
-        objects_list.append(d)
+        g = {}
+        g['coin']= str(row[0])
+        g['freq']= row[1]
+        ob_list.append(g)
     c.close()
+
+
+    sorted_ob_list = sorted(ob_list, key=lambda k: k['freq'], reverse=True)
+    sorted_ob_list = sorted_ob_list[0:199]
+
+    print('Sorted: ')
+    print(sorted_ob_list)
+
+    new_sorted_ob_list = []
+    for item in sorted_ob_list:
+        h = {}
+        h[str(item['coin'])] = [str(item['freq'])]
+        new_sorted_ob_list.append(h)
+    print('New Sorted OB List: ')
+    print(new_sorted_ob_list)
+    objects_list = new_sorted_ob_list
+
+    nm_list = []
+    for item in sorted_ob_list:
+        nm_list.append(item['coin'])
+    print('nm_list: ')
+    print(nm_list)
+    name_list = nm_list[0:199]
 
     sqlite_file = 'wordfreq'
     conn = sqlite3.connect(sqlite_file)
@@ -155,10 +180,10 @@ def update_coin_table(time_range):
     l = name_list
     placeholder = '?'  # For SQLite. See DBAPI paramstyle.
     placeholders = ', '.join(placeholder for unused in l)
-    query = 'SELECT name, symbol,price_usd, percent_change_1h, percent_change_24h, percent_change_7d FROM coinprice WHERE symbol COLLATE NOCASE  in (%s) OR name collate nocase in (%s)' % (placeholders, placeholders)
-    #print('name_list: ')
-    #print(name_list)
-    l = l+l
+    query = 'SELECT name, symbol,price_usd, percent_change_1h, percent_change_24h, percent_change_7d FROM coinprice WHERE name collate nocase in (%s)' % (placeholders,)
+    print('name_list: ')
+    print(name_list)
+
     #print('l: ')
     #print(l)
     c.execute(query, l,)
@@ -169,26 +194,77 @@ def update_coin_table(time_range):
         price_list.append(e)
 
 
+    price_list_symbol = []
+    b = name_list
+    print('l length:')
+    print(len(b))
+    placeholder = '?'  # For SQLite. See DBAPI paramstyle.
+    placeholders2 = ', '.join(placeholder for unused in b)
+    print('Pholder length: ')
+    print(len(placeholders2))
+    query = 'SELECT name, symbol,price_usd, percent_change_1h, percent_change_24h, percent_change_7d FROM coinprice WHERE symbol COLLATE NOCASE  in (%s)' % (placeholders,)
+    # print('name_list: ')
+    # print(name_list)
+    # print('l: ')
+    # print(l)
+    c.execute(query, b, )
+    rows = c.fetchall()
+    for row in rows:
+        f = {}
+        f[str(row[1]).lower()] = [row[2], row[3], row[4], row[5]]
+        price_list_symbol.append(f)
 
-    j = json.dumps(objects_list)
+
     print('Object List: ')
     print(objects_list)
     print(len(objects_list))
     print('Price List: ')
     print(price_list)
     print(len(price_list))
+    print('Price List Symbols: ')
+    print(price_list_symbol)
+    print(len(price_list_symbol))
 
     tot_list = objects_list + price_list
-    #OrderedDict((k, dict1[k] + dict2[k]) for k in dict1 if k in dict2)
+    print('Tot_list: ')
+    print(tot_list)
+
     temp_dict = defaultdict(list)
     for item in tot_list:
         for k, v in item.items():
             temp_dict[k] += v
 
     new_list = [{k: v} for k, v in temp_dict.items()]
+
+
+    new_list = new_list + price_list_symbol
+    temp_dict = defaultdict(list)
+    for item in new_list:
+
+        for k, v in item.items():
+            temp_dict[k] += v
+
+    new_list = [{k: v} for k, v in temp_dict.items()]
+
     print('New List: ')
     print(new_list)
 
+    final_list = []
+    for item in new_list:
+        for key in item:
+            array_list = item[key]
+            array_list.insert(0,key)
+            #print(array_list)
+        final_list.append(array_list)
+
+    for counter, item in enumerate(final_list):
+        if len(item) <= 2:
+            final_list.pop(counter)
+
+
+    print(final_list)
+    print(len(final_list))
+    j = json.dumps(final_list)
     socketio.emit('update_coin_table', j)
 
 

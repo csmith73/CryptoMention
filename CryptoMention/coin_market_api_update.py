@@ -2,7 +2,7 @@ import requests
 import sqlite3
 import json
 
-sqlite_file = 'coinprice.db'
+sqlite_file = 'wordfreq'
 conn = sqlite3.connect(sqlite_file)
 c = conn.cursor()
 
