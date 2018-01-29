@@ -1,5 +1,4 @@
 import collections
-import CryptoMention
 import json
 import os
 import sqlite3
