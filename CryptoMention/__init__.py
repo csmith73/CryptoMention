@@ -9,12 +9,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_socketio import SocketIO
-from CryptoMention.forms import SignupForm
 from flask.ext.bcrypt import Bcrypt
 from datetime import datetime, date, timedelta
 from collections import defaultdict
-import pandas as pd
-from dateutil import parser
+from flask_wtf import Form
+from wtforms import StringField, PasswordField, SubmitField
+from wtforms.validators import Email, DataRequired
 
 
 app = Flask(__name__)
@@ -34,6 +34,14 @@ login_manager.init_app(app)
 global cur_minutes
 global Timer1
 cur_minutes = 5
+
+class SignupForm(Form):
+    email = StringField('email',
+                validators=[DataRequired(),Email()])
+    password = PasswordField(
+                'password',
+                validators=[DataRequired()])
+    submit = SubmitField("Sign In")
 
 class User(db.Model):
     email = db.Column(db.String(80), primary_key=True, unique=True)
