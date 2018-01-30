@@ -1,9 +1,13 @@
 import requests
 import sqlite3
 import json
+import os.path
 
-sqlite_file = 'wordfreq'
-conn = sqlite3.connect(sqlite_file)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "wordfreq.db")
+
+
+conn = sqlite3.connect(db_path)
 c = conn.cursor()
 
 
