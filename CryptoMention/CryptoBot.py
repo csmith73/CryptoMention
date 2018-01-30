@@ -9,7 +9,7 @@ import praw
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 
-from CryptoMention.Import_words import tot_list, test_list
+from Import_words import tot_list, test_list
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "wordfreq.db")
