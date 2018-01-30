@@ -18,7 +18,7 @@ from wtforms.validators import Email, DataRequired
 
 
 app = Flask(__name__)
-app.secret_key = 'randomnum'
+app.secret_key = 'randomnumber'
 bcrypt = Bcrypt(app)
 
 
