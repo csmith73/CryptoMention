@@ -4,6 +4,7 @@ import os
 import sqlite3
 import threading
 import time
+import os.path
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request
 from flask_login import LoginManager, login_user, login_required, logout_user
@@ -25,6 +26,9 @@ sqllite_uri = 'sqlite:///users.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = sqllite_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "wordfreq.db")
 
 socketio = SocketIO(app)
 login_manager = LoginManager()
@@ -89,8 +93,7 @@ class RepeatedTimer(object):
 def read_db_historical(time_range,name):
     #print(time_range)
     global cur_minutes
-    sqlite_file = 'wordfreq.db'
-    conn = sqlite3.connect(sqlite_file)
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     past_time = datetime.now() - timedelta(minutes=time_range)
     c.execute("SELECT frequency, date FROM words WHERE date BETWEEN ? AND ? AND name=?",(past_time, datetime.now(),name))
@@ -117,8 +120,7 @@ def read_db_historical(time_range,name):
 def read_db(time_range):
     #print(time_range)
     global cur_minutes
-    sqlite_file = 'wordfreq'
-    conn = sqlite3.connect(sqlite_file)
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     five_minutes = datetime.now() - timedelta(minutes=time_range)
     c.execute("SELECT name, sum(frequency) FROM words WHERE date BETWEEN ? AND ? GROUP BY name ",(five_minutes, datetime.now()))
@@ -141,8 +143,7 @@ def read_db(time_range):
     Timer1.start()
 
 def update_coin_table(time_range):
-    sqlite_file = 'wordfreq.db'
-    conn = sqlite3.connect(sqlite_file)
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     five_minutes = datetime.now() - timedelta(minutes=time_range)
     c.execute("SELECT name, sum(frequency) FROM words WHERE date BETWEEN ? AND ? GROUP BY name ",(five_minutes, datetime.now()))
@@ -180,8 +181,8 @@ def update_coin_table(time_range):
     print(nm_list)
     name_list = nm_list[0:199]
 
-    sqlite_file = 'wordfreq.db'
-    conn = sqlite3.connect(sqlite_file)
+
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     price_list = []
     l = name_list

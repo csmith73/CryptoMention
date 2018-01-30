@@ -4,13 +4,15 @@ import threading
 import time
 from collections import Counter
 from datetime import datetime
-
+import os.path
 import praw
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 
 from CryptoMention.Import_words import tot_list, test_list
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "wordfreq.db")
 
 class RepeatedTimer(object):
   def __init__(self, interval, function, *args, **kwargs):
@@ -69,8 +71,7 @@ def find_key_words(text):
 
 #Update word counts to the sqlite db every minute and clear local counter cache
 def write_db(list):
-    sqlite_file = 'wordfreq.db'
-    conn = sqlite3.connect(sqlite_file)
+    conn = sqlite3.connect(db_path)
     c = conn.cursor()
     counter_list_sorted = sorted(list, key=lambda pair: pair[1], reverse=True)
     for item in counter_list_sorted:
