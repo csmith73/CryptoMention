@@ -89,7 +89,7 @@ class RepeatedTimer(object):
 def read_db_historical(time_range,name):
     #print(time_range)
     global cur_minutes
-    sqlite_file = 'wordfreq'
+    sqlite_file = 'wordfreq.db'
     conn = sqlite3.connect(sqlite_file)
     c = conn.cursor()
     past_time = datetime.now() - timedelta(minutes=time_range)
@@ -141,7 +141,7 @@ def read_db(time_range):
     Timer1.start()
 
 def update_coin_table(time_range):
-    sqlite_file = 'wordfreq'
+    sqlite_file = 'wordfreq.db'
     conn = sqlite3.connect(sqlite_file)
     c = conn.cursor()
     five_minutes = datetime.now() - timedelta(minutes=time_range)
@@ -180,7 +180,7 @@ def update_coin_table(time_range):
     print(nm_list)
     name_list = nm_list[0:199]
 
-    sqlite_file = 'wordfreq'
+    sqlite_file = 'wordfreq.db'
     conn = sqlite3.connect(sqlite_file)
     c = conn.cursor()
     price_list = []

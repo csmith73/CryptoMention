@@ -69,7 +69,7 @@ def find_key_words(text):
 
 #Update word counts to the sqlite db every minute and clear local counter cache
 def write_db(list):
-    sqlite_file = 'wordfreq'
+    sqlite_file = 'wordfreq.db'
     conn = sqlite3.connect(sqlite_file)
     c = conn.cursor()
     counter_list_sorted = sorted(list, key=lambda pair: pair[1], reverse=True)
