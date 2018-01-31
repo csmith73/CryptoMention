@@ -141,7 +141,7 @@ def read_db(time_range,socketid):
     socketio.emit('update',j,room=socketid)
     #print(cur_minutes)
     global Timer1
-    Timer1 = threading.Timer(10,read_db,[cur_minutes])
+    Timer1 = threading.Timer(10,read_db,[cur_minutes,socketid])
     Timer1.start()
 
 def update_coin_table(time_range,socketid):
