@@ -127,6 +127,9 @@
 
         })
         var socket = io.connect('http://' + document.domain + ':' + location.port);
+        socket.on('connect', function() {
+                socket.emit('connected');
+            });
         socket.emit('time_change', 'fmin')
         socket.on('update', function (update) {
             update_data = JSON.parse(update)

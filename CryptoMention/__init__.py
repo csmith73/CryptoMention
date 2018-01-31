@@ -119,7 +119,7 @@ def read_db_historical(time_range,name):
     socketio.emit('time_change_historical', j)
 
 
-def read_db(time_range):
+def read_db(time_range,socketid):
     #print(time_range)
     global cur_minutes
     conn = sqlite3.connect(db_path)
@@ -138,13 +138,13 @@ def read_db(time_range):
 
     #print(sorted_list)
     j = json.dumps(sorted_list)
-    socketio.emit('update',j)
+    socketio.emit('update',j,room=socketid)
     #print(cur_minutes)
     global Timer1
     Timer1 = threading.Timer(10,read_db,[cur_minutes])
     Timer1.start()
 
-def update_coin_table(time_range):
+def update_coin_table(time_range,socketid):
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     five_minutes = datetime.now() - timedelta(minutes=time_range)
@@ -275,8 +275,21 @@ def update_coin_table(time_range):
     #print(final_list)
     #print(len(final_list))
     j = json.dumps(final_list)
-    socketio.emit('update_coin_table', j)
+    socketio.emit('update_coin_table', j, room=socketid)
 
+clients = []
+socketid = ''
+
+@socketio.on('connected')
+def connected():
+    print("%s connected" % (request.sid))
+    clients.append(request.sid)
+    read_db(cur_minutes,request.sid)
+
+@socketio.on('disconnect')
+def disconnect():
+    print("%s disconnected" % (request.sid))
+    clients.remove(request.sid)
 
 @socketio.on('sub_change')
 def sub_reddit_change(sub_change):
@@ -289,7 +302,7 @@ def time_change_historical(time_change_historical):
 
 @socketio.on('time_change')
 def test_message(time_change):
-    print(time_change)
+    #print(time_change)
     global cur_minutes
     global Timer1
     if time_change == 'fmin':
@@ -301,8 +314,9 @@ def test_message(time_change):
     if time_change == 'day':
         cur_minutes = 1440
     Timer1.cancel()
-    read_db(cur_minutes)
-    update_coin_table(cur_minutes)
+    socketid = request.sid
+    read_db(cur_minutes,socketid)
+    update_coin_table(cur_minutes,socketid)
 
 
 
@@ -380,7 +394,7 @@ def logout():
     logout_user()
     return "Logged out"
 
-read_db(cur_minutes)
+
 #rt = RepeatedTimer(10, read_db, cur_minutes ) # it auto-starts, no need of rt.start()
 if __name__ == '__main__':
     socketio.run(app)
