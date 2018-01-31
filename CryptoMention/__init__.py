@@ -21,14 +21,16 @@ app = Flask(__name__)
 app.secret_key = 'randomnumber'
 bcrypt = Bcrypt(app)
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "wordfreq.db")
+user_db_path = os.path.join(BASE_DIR, "users.db")
 
-sqllite_uri = 'sqlite:///users.db'
+sqllite_uri = 'sqlite:///'+user_db_path
 app.config['SQLALCHEMY_DATABASE_URI'] = sqllite_uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(BASE_DIR, "wordfreq.db")
+
 
 socketio = SocketIO(app)
 login_manager = LoginManager()
@@ -162,23 +164,23 @@ def update_coin_table(time_range):
     sorted_ob_list = sorted(ob_list, key=lambda k: k['freq'], reverse=True)
     sorted_ob_list = sorted_ob_list[0:199]
 
-    print('Sorted: ')
-    print(sorted_ob_list)
+    #print('Sorted: ')
+    #print(sorted_ob_list)
 
     new_sorted_ob_list = []
     for item in sorted_ob_list:
         h = {}
         h[str(item['coin'])] = [str(item['freq'])]
         new_sorted_ob_list.append(h)
-    print('New Sorted OB List: ')
-    print(new_sorted_ob_list)
+    #print('New Sorted OB List: ')
+    #print(new_sorted_ob_list)
     objects_list = new_sorted_ob_list
 
     nm_list = []
     for item in sorted_ob_list:
         nm_list.append(item['coin'])
-    print('nm_list: ')
-    print(nm_list)
+    #print('nm_list: ')
+    #print(nm_list)
     name_list = nm_list[0:199]
 
 
@@ -189,8 +191,8 @@ def update_coin_table(time_range):
     placeholder = '?'  # For SQLite. See DBAPI paramstyle.
     placeholders = ', '.join(placeholder for unused in l)
     query = 'SELECT name, symbol,price_usd, percent_change_1h, percent_change_24h, percent_change_7d FROM coinprice WHERE name collate nocase in (%s)' % (placeholders,)
-    print('name_list: ')
-    print(name_list)
+    #print('name_list: ')
+    #print(name_list)
 
     #print('l: ')
     #print(l)
@@ -204,12 +206,12 @@ def update_coin_table(time_range):
 
     price_list_symbol = []
     b = name_list
-    print('l length:')
-    print(len(b))
+    #print('l length:')
+    #print(len(b))
     placeholder = '?'  # For SQLite. See DBAPI paramstyle.
     placeholders2 = ', '.join(placeholder for unused in b)
-    print('Pholder length: ')
-    print(len(placeholders2))
+    #print('Pholder length: ')
+    #print(len(placeholders2))
     query = 'SELECT name, symbol,price_usd, percent_change_1h, percent_change_24h, percent_change_7d FROM coinprice WHERE symbol COLLATE NOCASE  in (%s)' % (placeholders,)
     # print('name_list: ')
     # print(name_list)
@@ -223,19 +225,19 @@ def update_coin_table(time_range):
         price_list_symbol.append(f)
 
 
-    print('Object List: ')
-    print(objects_list)
-    print(len(objects_list))
-    print('Price List: ')
-    print(price_list)
-    print(len(price_list))
-    print('Price List Symbols: ')
-    print(price_list_symbol)
-    print(len(price_list_symbol))
+    #print('Object List: ')
+    #print(objects_list)
+    #print(len(objects_list))
+    #print('Price List: ')
+    #print(price_list)
+    #print(len(price_list))
+    #print('Price List Symbols: ')
+    #print(price_list_symbol)
+    #print(len(price_list_symbol))
 
     tot_list = objects_list + price_list
-    print('Tot_list: ')
-    print(tot_list)
+    #print('Tot_list: ')
+    #print(tot_list)
 
     temp_dict = defaultdict(list)
     for item in tot_list:
@@ -254,8 +256,8 @@ def update_coin_table(time_range):
 
     new_list = [{k: v} for k, v in temp_dict.items()]
 
-    print('New List: ')
-    print(new_list)
+    #print('New List: ')
+    #print(new_list)
 
     final_list = []
     for item in new_list:
@@ -270,8 +272,8 @@ def update_coin_table(time_range):
             final_list.pop(counter)
 
 
-    print(final_list)
-    print(len(final_list))
+    #print(final_list)
+    #print(len(final_list))
     j = json.dumps(final_list)
     socketio.emit('update_coin_table', j)
 
@@ -336,8 +338,7 @@ def login():
     if request.method == 'GET':
         return render_template('login.html', form=form)
     elif request.method == 'POST':
-        print(form.password.data)
-        print(form.email.data)
+
         if form.validate_on_submit():
             user=User.query.filter_by(email=form.email.data).first()
             if user:
@@ -368,7 +369,7 @@ def signup():
                 db.session.add(newuser)
                 db.session.commit()
                 login_user(newuser)
-            return "User created!!!"
+            return render_template('dashboard.html')
         else:
              return "Form didn't validate"
 

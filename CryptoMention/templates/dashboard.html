@@ -139,14 +139,14 @@
 
         socket.on('update_coin_table', function (update) {
             table_data = JSON.parse(update)
-            console.log(JSON.stringify(table_data))
+            //console.log(JSON.stringify(table_data))
             cointable.clear();
             cointable.rows.add(table_data).draw();
 
         })
 
         $("button").click(function () {
-            console.log(this.id);
+            //console.log(this.id);
             socket.emit('time_change', this.id)
         });
         $(this).addClass("active").siblings().removeClass("active");
@@ -154,7 +154,7 @@
             $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
             $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
             var sub_reddit = $(this).text()
-            console.log(sub_reddit)
+            //console.log(sub_reddit)
             socket.emit('sub_change', sub_reddit)
         });
 

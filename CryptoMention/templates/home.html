@@ -92,13 +92,13 @@
             update_data = JSON.stringify(update_data)
             update_data = "[{label: 'Series 1', values: " + update_data + '}]'
             update_data = eval('(' + update_data + ')');
-            console.log(update_data)
+            //console.log(update_data)
             bar.setData(update_data);
             bar.draw()
         })
 
         $("button").click(function () {
-            console.log(this.id);
+            //console.log(this.id);
             socket.emit('time_change', this.id)
         });
         $(this).addClass("active").siblings().removeClass("active");
@@ -106,7 +106,7 @@
             $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
             $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
             var sub_reddit = $(this).text()
-            console.log(sub_reddit)
+            //console.log(sub_reddit)
             socket.emit('sub_change', sub_reddit)
         });
     })

@@ -57,12 +57,12 @@ def process(text,stopwords=[]):
     text = text.lower()
     translate_table = dict((ord(char), None) for char in string.punctuation)
     text = text.translate(translate_table)
-    print(text)
+    #print(text)
     tokenizer = RegexpTokenizer(r'\w+')
     tokens = tokenizer.tokenize(text)
-    print('All Words: '+ str(tokens))
+    #print('All Words: '+ str(tokens))
     tokens = [word1 for word1 in tokens if word1 in tot_list and len(word1)> 2]
-    print('Coins Only: ' + str(tokens))
+    print('Coins Only: ' + str(len(tokens)))
     return [word for word in tokens if word not in stopwords and not word.isdigit()]
 
 def find_key_words(text):
@@ -77,8 +77,6 @@ def write_db(list):
     for item in counter_list_sorted:
         #print(item[0], item[1])
         cur_date = datetime.now()
-        #c.execute("UPDATE words SET frequency = frequency + ?,date = ? WHERE name = ?", (item[1],cur_date,item[0]))
-        #c.execute("INSERT OR IGNORE INTO words (name, frequency, date) VALUES (?, ?, ?)",(item[0], item[1], cur_date))
         c.execute("INSERT INTO words (name, frequency, date) VALUES (?, ?, ?)", (item[0], item[1], cur_date))
     conn.commit()
     conn.close()
@@ -91,9 +89,7 @@ rt = RepeatedTimer(1, write_db, counter.items()) # it auto-starts, no need of rt
 
 #Get comment stream from specific subreddit and create nltk tokens
 for comment in reddit.subreddit('CryptoCurrency').stream.comments():
-    #print(count)
     tokens = process(comment.body,stopword_list)
-    print(tokens)
     counter.update(tokens)
 
 
