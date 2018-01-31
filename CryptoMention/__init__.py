@@ -121,7 +121,9 @@ def read_db_historical(time_range,name):
 
 def read_db(time_range,socketid):
     #print(time_range)
+    global Timer1
     global cur_minutes
+
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     five_minutes = datetime.now() - timedelta(minutes=time_range)
@@ -140,7 +142,7 @@ def read_db(time_range,socketid):
     j = json.dumps(sorted_list)
     socketio.emit('update',j,room=socketid)
     #print(cur_minutes)
-    global Timer1
+
     Timer1 = threading.Timer(10,read_db,[cur_minutes,socketid])
     Timer1.start()
 
@@ -283,7 +285,8 @@ socketid = ''
 @socketio.on('connected')
 def connected():
     print("%s connected" % (request.sid))
-    read_db(cur_minutes,request.sid)
+    read_db(5,request.sid)
+    update_coin_table(5, socketid)
 
 @socketio.on('disconnect')
 def disconnect():
