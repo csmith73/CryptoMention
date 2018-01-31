@@ -283,13 +283,12 @@ socketid = ''
 @socketio.on('connected')
 def connected():
     print("%s connected" % (request.sid))
-    clients.append(request.sid)
     read_db(cur_minutes,request.sid)
 
 @socketio.on('disconnect')
 def disconnect():
     print("%s disconnected" % (request.sid))
-    clients.remove(request.sid)
+
 
 @socketio.on('sub_change')
 def sub_reddit_change(sub_change):
