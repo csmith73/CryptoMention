@@ -315,9 +315,10 @@ def test_message(time_change):
         cur_minutes = 60
     if time_change == 'day':
         cur_minutes = 1440
-    Timer1.cancel()
+
     socketid = request.sid
-    read_db(cur_minutes,socketid)
+    read_db(cur_minutes, socketid)
+    Timer1.cancel()
     update_coin_table(cur_minutes,socketid)
 
 
