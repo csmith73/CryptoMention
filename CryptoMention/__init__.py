@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, request
 from flask_login import LoginManager, login_user, login_required, logout_user
 from flask_socketio import SocketIO
-from flask.ext.bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt
 from datetime import datetime, date, timedelta
 from collections import defaultdict
 from flask_wtf import Form
@@ -142,8 +142,9 @@ def read_db(time_range,socketid):
     j = json.dumps(sorted_list)
     socketio.emit('update',j,room=socketid)
     #print(cur_minutes)
+    #print(j)
 
-    Timer1 = threading.Timer(10,read_db,[cur_minutes,socketid])
+    Timer1 = threading.Timer(5,read_db,[cur_minutes,socketid])
     Timer1.start()
 
 def update_coin_table(time_range,socketid):
@@ -316,10 +317,13 @@ def test_message(time_change):
     if time_change == 'day':
         cur_minutes = 1440
 
+
     socketid = request.sid
+    print('socket time change:')
+    print(cur_minutes)
     read_db(cur_minutes, socketid)
-    Timer1.cancel()
     update_coin_table(cur_minutes,socketid)
+
 
 
 
@@ -398,6 +402,6 @@ def logout():
     return "Logged out"
 
 
-#rt = RepeatedTimer(10, read_db, cur_minutes ) # it auto-starts, no need of rt.start()
+
 if __name__ == '__main__':
     socketio.run(app)
